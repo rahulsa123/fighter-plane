@@ -1,0 +1,30 @@
+
+
+def key_input(pygame,bullet_array=[],plane_x=-1,plane_y=-1,plane_width=-1):
+    keyboard=dict()
+    for i in ("up","down","left","right","exit"):
+        d[i]=False
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+                d["exit"]=True
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_w:
+                d["up"]=True
+            if event.key == pygame.K_s:
+                d["down"]=True
+            if event.key == pygame.K_a:
+                d["left"]=True
+            if event.key == pygame.K_d:
+                d["right"]=True
+            if event.key == pygame.K_SPACE and plane_width!=-1:
+                bullet_array.append([plane_x + plane_width, plane_y + 20])
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_w:
+                d["up"] = False
+            if event.key == pygame.K_s:
+                d["down"] = False
+            if event.key == pygame.K_a:
+                d["left"] = False
+            if event.key == pygame.K_d:
+                d["right"] = False
+    return keyboard

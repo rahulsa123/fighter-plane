@@ -1,0 +1,178 @@
+import pygame
+import random
+import time
+pygame.init()
+
+display_width=600
+display_height=600
+gameDisplay=pygame.display.set_mode((display_width,display_height))
+pygame.display.set_caption("AIR FROCE")
+clock=pygame.time.Clock()
+
+background=pygame.image.load("background.jpg")
+Plane=pygame.image.load("plane.png")
+plane_height=100
+plane_width=100
+
+fire=pygame.image.load("fire.png")
+fire1=pygame.image.load("fire1.png")
+fire_height=60
+fire_width=60
+
+big_monster=pygame.image.load("big_monster.png")
+monster_height=100
+monster_width=100
+
+cloudImg=pygame.image.load("cloud.png")
+cloud_height=120
+cloud_width=100
+
+#keyboard input
+up,down,left,right,space =False,False,False,False,False
+plane_health=100
+
+gun_power_x=-1
+gun_power_y=-1
+
+def monster(x,y):
+    gameDisplay.blit(big_monster, (x, y))
+def bullet(l,x=fire):
+    gameDisplay.blit(x,(l[0],l[1]))
+def cloud(x,y):
+    gameDisplay.blit(cloudImg,(x,y))
+def plane(x,y):
+    gameDisplay.blit(Plane,(x,y))
+def k_input():
+    global up, down, left, right, space
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_w:
+                up, down, left, right = True, False, False, False
+            if event.key == pygame.K_s:
+                up, down, left, right = False, True, False, False
+            if event.key == pygame.K_a:
+                up, down, left, right = False, False, True, False
+            if event.key == pygame.K_d:
+                up, down, left, right = False, False, False, True
+            if event.key == pygame.K_SPACE:
+                space = True
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_w:
+                up = False
+            if event.key == pygame.K_s:
+                down = False
+            if event.key == pygame.K_a:
+                left = False
+            if event.key == pygame.K_d:
+                right = False
+            if event.key == pygame.K_SPACE:
+                space = False
+def Text_object(text,font):
+    textSurface=font.render(text,True,(250,0,0))
+    return textSurface,textSurface.get_rect()
+
+def message_display(text,x,y,size=20):
+    largeText=pygame.font.Font("freesansbold.ttf",size)
+    TextSurf,TextRect=Text_object(text,largeText)
+    TextRect.center=((x),(y))
+    gameDisplay.blit(TextSurf,TextRect)
+def Crash(x,y):
+    global plane_health, space
+    cloud(x,y)
+    message_display("Plane Crash",display_width//2-20,display_height//2-30,60)
+    pygame.display.flip()
+    time.sleep(1)
+    message_display("Press  space for Restart", display_width // 2 -20, display_height // 2 +60, 40)
+    pygame.display.flip()
+    time.sleep(1)
+    while(True):
+        k_input()
+        if(space):
+            plane_health= 100
+            space=False
+            game()
+def game():
+    global space,plane_health
+    plane_y=display_height//2
+    plane_x=display_width//5
+    gun_limit=3
+    gameExit=False
+    bullet_array=[]
+
+    monster_bullet_y=random.randrange(100,400)
+    monster_bullet_x=0
+    monster_x=500
+    monster_y=random.randrange(50,400)
+    movement=3
+    crash=False
+    while not gameExit:
+        gameDisplay.blit(background, (0, 0))
+        pygame.draw.rect(gameDisplay, (0, 255, 0), [5, 5, plane_health, 10])
+        message_display("Health",50,29)
+        message_display("GUN BULLET",display_width-100,20)
+        message_display(str(gun_limit),display_width-100,50)
+        k_input()
+        if (up):
+            plane_y-=5
+        if down:
+            plane_y+=5
+        if left:
+            plane_x-=5
+        if right:
+            plane_x+=5
+        if (space and len(bullet_array)<gun_limit):
+            bullet_array.append([plane_x + plane_width, plane_y + 20])
+            space=False
+        for i in bullet_array:
+            i[0]+=5
+            if(i[0]>650):
+                bullet_array.remove(i)
+            bullet(i)
+            if ((i[0] + fire_width >= monster_x and i[0] + fire_width <= monster_x + monster_width) and (i[1] >= monster_y and i[1] <= monster_y + monster_height)):
+                crash = True
+                bullet_array.remove(i)
+        if(plane_y<50):
+            plane_y=50
+        if(plane_y>590-plane_height):
+            plane_y=590-plane_height
+        if(plane_x<0):
+            plane_x=0
+        if(plane_x>590-plane_width):
+            plane_x=590-plane_width
+
+        if monster_bullet_y>=monster_y and monster_bullet_y<=monster_y+5:
+            monster_bullet_x=monster_x
+        if  monster_bullet_x>-5 and monster_bullet_x<600:
+            monster_bullet_x-=5
+            bullet([monster_bullet_x,monster_bullet_y],x=fire1)
+        else:
+            monster_bullet_x=600
+            monster_bullet_y=random.randrange(100,400)
+        if not crash:
+            monster(monster_x,monster_y)
+        else:
+            cloud(monster_x,monster_y)
+            monster_x = 500
+            monster_y = random.randrange(20, 400)
+            pygame.display.update()
+            crash=False
+            time.sleep(0.2)
+        monster_y += movement
+        if (monster_y < 50):
+            movement = 3
+        if (monster_y > 500):
+            movement = -3
+        if ((monster_bullet_x + fire_width >= plane_x and monster_bullet_x + fire_width <= plane_x + plane_width) and (monster_bullet_y >= plane_y and monster_bullet_y <= plane_y + plane_height)):
+            plane_health-=10
+            monster_bullet_x=-10
+        if(plane_health==0):
+            Crash(plane_x,plane_y)
+
+        #health(plane_health)
+        plane(plane_x, plane_y)
+        pygame.display.update()
+        clock.tick(60)
+game()
